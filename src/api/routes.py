@@ -20,3 +20,43 @@ def handle_hello():
     }
 
     return jsonify(response_body), 200
+
+@api.route('/login', methods=['POST'])
+def login():
+    datos_login = request.json
+    email = datos_login.get('email')
+    password = datos_login.get('password')
+
+   
+    usuario = User.query.filter_by(email=email).first()
+
+    if usuario and usuario.password == password:
+         access_token = create_access_token(identity=usuario.id) 
+         return jsonify({"token": access_token}), 200
+    else:
+        return jsonify({'mensaje': 'Usuario y Contraseña no encontrados'}), 401
+
+#----ENDPOINT PARA  REGISTRAR UN USUARIO-------------
+
+@api.route('/signup', methods=['POST'])
+def register_User():
+    data = request.get_json()
+    print(data);
+    name = data["name"]
+    email = data["email"]
+    password = data["password"]
+    
+    new_user = User(name =name, email=email, password=password)
+    db.session.add(new_user)
+    db.session.commit()
+
+    response_body = {
+        "user": {
+            "id": new_user.id,
+            "name": new_user.name,
+            "email": new_user.email,
+            
+        },
+        "msg": "El usuario se registró exitosamente"
+    }
+    return jsonify(response_body), 200 
