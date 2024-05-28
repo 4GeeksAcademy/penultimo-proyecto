@@ -5,6 +5,7 @@ from flask import Flask, request, jsonify, url_for, Blueprint
 from api.models import db, User
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
+from flask_jwt_extended import create_access_token
 
 api = Blueprint('api', __name__)
 
@@ -42,21 +43,29 @@ def login():
 def register_User():
     data = request.get_json()
     print(data);
-    name = data["name"]
     email = data["email"]
     password = data["password"]
     
-    new_user = User(name =name, email=email, password=password)
+    new_user = User( email=email, password=password)
     db.session.add(new_user)
     db.session.commit()
 
     response_body = {
         "user": {
             "id": new_user.id,
-            "name": new_user.name,
             "email": new_user.email,
             
         },
         "msg": "El usuario se registró exitosamente"
     }
     return jsonify(response_body), 200 
+
+@api.route('/wipeall', methods=['GET'])
+def database_wipe():
+    try:
+        db.reflect()
+        db.drop_all()
+        db.session.commit()
+    except Exception as e:
+        return "mec", 500
+    return "ok", 200
